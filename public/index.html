@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Railway Live</title>
+
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo">RAILWAY LIVE</div>
+        <div class="subtitle">16 STATION CIRCULAR LINE</div>
+    </div>
+
+    <div class="top-actions">
+
+        <div class="connection">
+            <span class="connection-dot"></span>
+            <span id="connection">CONNECTING</span>
+        </div>
+
+        <button class="login-button" id="loginButton">
+            ANMELDEN
+        </button>
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <div class="dashboard">
+
+        <!-- ================================
+             RAILWAY NETWORK
+             ================================= -->
+
+        <section class="network">
+
+            <div class="network-title">
+                LIVE NETWORK
+            </div>
+
+            <div class="track" id="track">
+
+                <div class="train">
+
+                    <div class="train-icon">🚆</div>
+
+                    <div class="train-label">
+                        TRAIN 01
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="halt-info">
+
+                <div class="halt-label">
+                    AKTUELLER STATUS
+                </div>
+
+                <div
+                    class="halt-station"
+                    id="haltStation"
+                >
+                    S05
+                </div>
+
+                <div
+                    class="halt-time"
+                    id="haltTime"
+                >
+                    HALT · 00:03
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================
+             RIGHT SIDE
+             ================================= -->
+
+        <aside class="side">
+
+
+            <!-- CURRENT STATUS -->
+
+            <section class="card status-card">
+
+                <div class="card-title">
+                    AKTUELLER HALT
+                </div>
+
+                <div
+                    class="current-station"
+                    id="currentStation"
+                >
+                    S05
+                </div>
+
+
+                <div class="status-row">
+
+
+                    <div>
+
+                        <div class="small-label">
+                            ABFAHRT IN
+                        </div>
+
+                        <div
+                            class="countdown"
+                            id="departure"
+                        >
+                            00:03
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="small-label">
+                            NÄCHSTE STATION
+                        </div>
+
+                        <div
+                            class="next-name"
+                            id="nextStation"
+                        >
+                            S06
+                        </div>
+
+                        <div
+                            class="eta"
+                            id="eta"
+                        >
+                            Ankunft · 00:08
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="small-label">
+                            ON BOARD
+                        </div>
+
+                        <div
+                            class="passenger-number"
+                            id="passengers"
+                        >
+                            3
+                        </div>
+
+                        <div class="eta">
+                            Personen
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================
+                 WAITING + SERVER
+                 ================================= -->
+
+            <div class="lower-grid">
+
+
+                <!-- WAITING -->
+
+                <section class="card waiting-card">
+
+                    <div class="card-title">
+                        WARTENDE PASSAGIERE
+                    </div>
+
+                    <div
+                        class="waiting-list"
+                        id="waitingList"
+                    ></div>
+
+                </section>
+
+
+                <!-- SERVER -->
+
+                <section class="server-card">
+
+                    <div class="server-header">
+
+                        <div class="server-title">
+                            SERVER DATA
+                        </div>
+
+                        <div class="server-live">
+
+                            <span
+                                class="server-live-dot"
+                            ></span>
+
+                            SERVER LIVE
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="server-source">
+
+                        Datenquelle:
+
+                        <span>
+                            Node.js / Elastic Beanstalk
+                        </span>
+
+                    </div>
+
+
+                    <div class="server-details">
+
+
+                        <div class="server-detail">
+
+                            <div class="server-detail-label">
+                                TRANSPORT
+                            </div>
+
+                            <div
+                                class="server-detail-value"
+                                id="transport"
+                            >
+                                WebSocket
+                            </div>
+
+                        </div>
+
+
+                        <div class="server-detail">
+
+                            <div class="server-detail-label">
+                                UPDATES
+                            </div>
+
+                            <div
+                                class="server-detail-value"
+                                id="updateCounter"
+                            >
+                                0
+                            </div>
+
+                        </div>
+
+
+                        <div class="server-detail">
+
+                            <div class="server-detail-label">
+                                SERVER TIME
+                            </div>
+
+                            <div
+                                class="server-detail-value"
+                                id="serverTime"
+                            >
+                                --
+                            </div>
+
+                        </div>
+
+
+                        <div class="server-detail">
+
+                            <div class="server-detail-label">
+                                CLIENT TIME
+                            </div>
+
+                            <div
+                                class="server-detail-value"
+                                id="clientTime"
+                            >
+                                --
+                            </div>
+
+                        </div>
+
+
+                        <div class="server-detail">
+
+                            <div class="server-detail-label">
+                                REGION
+                            </div>
+
+                            <div
+                                class="server-detail-value"
+                                id="region"
+                            >
+                                --
+                            </div>
+
+                        </div>
+
+
+                        <div class="server-detail">
+
+                            <div class="server-detail-label">
+                                INSTANCE
+                            </div>
+
+                            <div
+                                class="server-detail-value"
+                                id="instanceId"
+                            >
+                                --
+                            </div>
+
+                        </div>
+
+
+                        <div class="server-detail">
+
+                            <div class="server-detail-label">
+                                AVAILABILITY ZONE
+                            </div>
+
+                            <div
+                                class="server-detail-value"
+                                id="availabilityZone"
+                            >
+                                --
+                            </div>
+
+                        </div>
+
+
+                        <div class="server-detail">
+
+                            <div class="server-detail-label">
+                                LAST UPDATE
+                            </div>
+
+                            <div
+                                class="server-detail-value"
+                                id="lastUpdate"
+                            >
+                                --
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="server-origin"
+                        id="dataOrigin"
+                    >
+                        DATA ORIGIN: SERVER GENERATED
+                    </div>
+
+                </section>
+
+            </div>
+
+        </aside>
+
+    </div>
+
+
+    <div class="footer">
+        LIVE SIMULATION · WEBSOCKET · REAL TIME
+    </div>
+
+</main>
+
+
+<!-- JavaScript separat -->
+
+<script src="app.js"></script>
+
+</body>
+</html>

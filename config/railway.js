@@ -1,0 +1,11 @@
+
+module.exports = {
+    PORT: process.env.PORT || 8080,
+    STATION_COUNT: 16,
+    HALT_SECONDS: 3,
+    TRAVEL_SECONDS: 5,
+    INITIAL_STATION_INDEX: 4, // S05
+    INITIAL_PASSENGERS: 3,
+    MAX_WAITING_PASSENGERS: 4,
+    MAX_BOARDING_PER_STOP: 2
+};

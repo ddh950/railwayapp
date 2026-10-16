@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: >
+  Railway Live Update platform.
+  Parent stack containing nested CloudFormation stacks.
+
+Parameters:
+
+  ProjectName:
+    Type: String
+    Default: RailwayLive
+
+  TemplateBucket:
+    Type: String
+    Default: templatebucket000011111
+
+  ApplicationBucket:
+    Type: String
+    Default: applicationbucket000011111
+
+  ApplicationKey:
+    Type: String
+    Default: railway-live.zip
+
+  CertificateArn:
+    Type: String
+    Default: ''
+
+
+Conditions:
+
+  UseCertificate:
+    !Not
+      - !Equals
+        - !Ref CertificateArn
+        - ''
+
+
+Resources:
+
+
+  # NETWORK
+ 
+
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+
+    Properties:
+
+      TemplateURL:
+        !Sub 'https://${TemplateBucket}.s3.amazonaws.com/network.yaml'
+
+      Parameters:
+
+        ProjectName:
+          !Ref ProjectName
+
+
+
+  # IAM
+
+
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+
+    Properties:
+
+      TemplateURL:
+        !Sub 'https://${TemplateBucket}.s3.amazonaws.com/iam.yaml'
+
+      Parameters:
+
+        ProjectName:
+          !Ref ProjectName
+
+
+  # WEB SERVER
+
+
+  WebServerStack:
+    Type: AWS::CloudFormation::Stack
+
+    DependsOn:
+
+      - NetworkStack
+      - IAMStack
+
+    Properties:
+
+      TemplateURL:
+        !Sub 'https://${TemplateBucket}.s3.amazonaws.com/webserver.yaml'
+
+      Parameters:
+
+        ProjectName:
+          !Ref ProjectName
+
+        CertificateArn:
+          !Ref CertificateArn
+
+        ApplicationBucket:
+          !Ref ApplicationBucket
+
+        ApplicationKey:
+          !Ref ApplicationKey
+
+        VpcId:
+          !GetAtt NetworkStack.Outputs.VpcId
+
+        PublicSubnetA:
+          !GetAtt NetworkStack.Outputs.PublicSubnetA
+
+        PublicSubnetB:
+          !GetAtt NetworkStack.Outputs.PublicSubnetB
+
+        EC2InstanceProfile:
+          !GetAtt IAMStack.Outputs.EC2InstanceProfile
+
+        ElasticBeanstalkServiceRole:
+          !GetAtt IAMStack.Outputs.ElasticBeanstalkServiceRole
+
+Outputs:
+
+  ElasticBeanstalkURL:
+    Description: Elastic Beanstalk environment URL
+    Value:
+      !GetAtt WebServerStack.Outputs.EnvironmentURL
+
+  ElasticBeanstalkEnvironment:
+    Description: Elastic Beanstalk environment name
+    Value:
+      !GetAtt WebServerStack.Outputs.EnvironmentName

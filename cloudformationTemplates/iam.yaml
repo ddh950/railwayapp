@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: >
+  IAM roles required by Elastic Beanstalk.
+
+Parameters:
+
+  ProjectName:
+    Type: String
+
+
+Resources:
+
+
+  # ELASTIC BEANSTALK SERVICE ROLE
+
+
+  ElasticBeanstalkServiceRole:
+    Type: AWS::IAM::Role
+
+    Properties:
+
+      RoleName:
+        !Sub '${ProjectName}-ElasticBeanstalkServiceRole'
+
+      AssumeRolePolicyDocument:
+
+        Version: '2012-10-17'
+
+        Statement:
+
+          - Effect: Allow
+
+            Principal:
+
+              Service:
+                - elasticbeanstalk.amazonaws.com
+
+            Action:
+              - sts:AssumeRole
+
+      ManagedPolicyArns:
+
+        - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth
+
+
+  # EC2 ROLE
+
+
+  EC2Role:
+    Type: AWS::IAM::Role
+
+    Properties:
+
+      RoleName:
+        !Sub '${ProjectName}-EC2Role'
+
+      AssumeRolePolicyDocument:
+
+        Version: '2012-10-17'
+
+        Statement:
+
+          - Effect: Allow
+
+            Principal:
+
+              Service:
+                - ec2.amazonaws.com
+
+            Action:
+              - sts:AssumeRole
+
+      ManagedPolicyArns:
+
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+
+  # INSTANCE PROFILE
+
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+
+    Properties:
+
+      Roles:
+
+        - !Ref EC2Role
+
+
+Outputs:
+
+  ElasticBeanstalkServiceRole:
+    Value:
+      !GetAtt ElasticBeanstalkServiceRole.Arn
+
+  EC2InstanceProfile:
+    Value:
+      !Ref EC2InstanceProfile

@@ -1,0 +1,183 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: >
+  Network infrastructure for the Railway Live Update application.
+
+Parameters:
+
+  ProjectName:
+    Type: String
+
+
+Resources:
+
+  ############################################################
+  # VPC
+  ############################################################
+
+  VPC:
+    Type: AWS::EC2::VPC
+
+    Properties:
+
+      CidrBlock: 10.0.0.0/16
+
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+      Tags:
+
+        - Key: Name
+          Value: !Sub '${ProjectName}-VPC'
+
+
+  ############################################################
+  # INTERNET GATEWAY
+  ############################################################
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+    Properties:
+
+      Tags:
+
+        - Key: Name
+          Value: !Sub '${ProjectName}-IGW'
+
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+
+    Properties:
+
+      VpcId:
+        !Ref VPC
+
+      InternetGatewayId:
+        !Ref InternetGateway
+
+
+  ############################################################
+  # PUBLIC SUBNET A
+  ############################################################
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+
+    Properties:
+
+      VpcId:
+        !Ref VPC
+
+      CidrBlock: 10.0.1.0/24
+
+      AvailabilityZone:
+        !Select
+          - 0
+          - !GetAZs ''
+
+      MapPublicIpOnLaunch: true
+
+      Tags:
+
+        - Key: Name
+          Value: !Sub '${ProjectName}-Public-A'
+
+
+  ############################################################
+  # PUBLIC SUBNET B
+  ############################################################
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+
+    Properties:
+
+      VpcId:
+        !Ref VPC
+
+      CidrBlock: 10.0.2.0/24
+
+      AvailabilityZone:
+        !Select
+          - 1
+          - !GetAZs ''
+
+      MapPublicIpOnLaunch: true
+
+      Tags:
+
+        - Key: Name
+          Value: !Sub '${ProjectName}-Public-B'
+
+
+  # ROUTE TABLE
+
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+
+    Properties:
+
+      VpcId:
+        !Ref VPC
+
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+
+    DependsOn:
+      - InternetGatewayAttachment
+
+    Properties:
+
+      RouteTableId:
+        !Ref PublicRouteTable
+
+      DestinationCidrBlock: 0.0.0.0/0
+
+      GatewayId:
+        !Ref InternetGateway
+
+
+  # ROUTE ASSOCIATIONS
+
+
+  PublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+
+    Properties:
+
+      SubnetId:
+        !Ref PublicSubnetA
+
+      RouteTableId:
+        !Ref PublicRouteTable
+
+
+  PublicSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+
+    Properties:
+
+      SubnetId:
+        !Ref PublicSubnetB
+
+      RouteTableId:
+        !Ref PublicRouteTable
+
+
+Outputs:
+
+  VpcId:
+    Value:
+      !Ref VPC
+
+  PublicSubnetA:
+    Value:
+      !Ref PublicSubnetA
+
+  PublicSubnetB:
+    Value:
+      !Ref PublicSubnetB

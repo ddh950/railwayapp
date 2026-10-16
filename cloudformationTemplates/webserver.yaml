@@ -1,0 +1,273 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: >
+  Elastic Beanstalk WebSocket server.
+
+Parameters:
+
+  ProjectName:
+    Type: String
+
+  CertificateArn:
+    Type: String
+    Default: ''
+
+  ApplicationBucket:
+    Type: String
+
+  ApplicationKey:
+    Type: String
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet::Id
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet::Id
+
+  EC2InstanceProfile:
+    Type: String
+
+  ElasticBeanstalkServiceRole:
+    Type: String
+
+
+Conditions:
+
+  UseHTTPS:
+    !Not
+      - !Equals
+        - !Ref CertificateArn
+        - ''
+
+
+Resources:
+
+
+  # ELASTIC BEANSTALK APPLICATION
+
+
+  ElasticBeanstalkApplication:
+    Type: AWS::ElasticBeanstalk::Application
+
+    Properties:
+
+      ApplicationName:
+        !Sub '${ProjectName}-Application'
+
+
+
+  # APPLICATION VERSION
+
+
+  ElasticBeanstalkApplicationVersion:
+    Type: AWS::ElasticBeanstalk::ApplicationVersion
+
+    Properties:
+
+      ApplicationName:
+        !Ref ElasticBeanstalkApplication
+
+      Description:
+        Railway WebSocket application.
+
+      SourceBundle:
+
+        S3Bucket:
+          !Ref ApplicationBucket
+
+        S3Key:
+          !Ref ApplicationKey
+
+
+  # ENVIRONMENT
+ 
+
+  ElasticBeanstalkEnvironment:
+    Type: AWS::ElasticBeanstalk::Environment
+
+    Properties:
+
+      ApplicationName:
+        !Ref ElasticBeanstalkApplication
+
+      EnvironmentName:
+        !Sub '${ProjectName}-Environment'
+
+      SolutionStackName:
+        64bit Amazon Linux 2023 v6.11.10 running Node.js 24
+
+      VersionLabel:
+        !Ref ElasticBeanstalkApplicationVersion
+
+      Tier:
+
+        Name: WebServer
+        Type: Standard
+
+      OptionSettings:
+
+        
+        # VPC
+   
+
+        - Namespace: aws:ec2:vpc
+          OptionName: VPCId
+          Value:
+            !Ref VpcId
+
+        - Namespace: aws:ec2:vpc
+          OptionName: Subnets
+          Value:
+            !Join
+              - ','
+              - - !Ref PublicSubnetA
+                - !Ref PublicSubnetB
+
+        - Namespace: aws:ec2:vpc
+          OptionName: ELBSubnets
+          Value:
+            !Join
+              - ','
+              - - !Ref PublicSubnetA
+                - !Ref PublicSubnetB
+
+        - Namespace: aws:ec2:vpc
+          OptionName: AssociatePublicIpAddress
+          Value: 'true'
+
+
+        ######################################################
+        # LOAD BALANCER
+        ######################################################
+
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: EnvironmentType
+          Value: LoadBalanced
+
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: LoadBalancerType
+          Value: application
+
+        - Namespace: aws:elasticbeanstalk:environment
+          OptionName: ServiceRole
+          Value:
+            !Ref ElasticBeanstalkServiceRole
+
+
+      
+        # EC2
+        
+
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: IamInstanceProfile
+          Value:
+            !Ref EC2InstanceProfile
+
+        - Namespace: aws:autoscaling:launchconfiguration
+          OptionName: InstanceType
+          Value: t3.micro
+
+
+        # AUTO SCALING
+        
+
+        - Namespace: aws:autoscaling:asg
+          OptionName: MinSize
+          Value: '1'
+
+        - Namespace: aws:autoscaling:asg
+          OptionName: MaxSize
+          Value: '2'
+
+
+
+        # HEALTH
+        
+
+        - Namespace: aws:elasticbeanstalk:healthreporting:system
+          OptionName: SystemType
+          Value: enhanced
+
+
+        # APPLICATION PROCESS
+        
+
+        - Namespace: aws:elasticbeanstalk:environment:process:default
+          OptionName: Port
+          Value: '8080'
+
+        - Namespace: aws:elasticbeanstalk:environment:process:default
+          OptionName: Protocol
+          Value: HTTP
+
+        - Namespace: aws:elasticbeanstalk:environment:process:default
+          OptionName: HealthCheckPath
+          Value: /health
+
+        - Namespace: aws:elasticbeanstalk:environment:process:default
+          OptionName: HealthCheckInterval
+          Value: '30'
+
+
+      
+        # ALB IDLE TIMEOUT
+      
+
+        - Namespace: aws:elbv2:loadbalancer
+          OptionName: IdleTimeout
+          Value: '3600'
+
+
+        # HTTP LISTENER
+     
+
+        - Namespace: aws:elbv2:listener:default
+          OptionName: ListenerEnabled
+          Value: 'true'
+
+        - Namespace: aws:elbv2:listener:default
+          OptionName: Protocol
+          Value: HTTP
+
+        - Namespace: aws:elbv2:listener:default
+          OptionName: DefaultProcess
+          Value: default
+
+
+       
+        # HTTPS LISTENER
+       
+
+        - Namespace: aws:elbv2:listener:443
+          OptionName: ListenerEnabled
+          Value:
+            !If
+              - UseHTTPS
+              - 'true'
+              - 'false'
+
+        - Namespace: aws:elbv2:listener:443
+          OptionName: Protocol
+          Value: HTTPS
+
+        - Namespace: aws:elbv2:listener:443
+          OptionName: SSLCertificateArns
+          Value:
+            !If
+              - UseHTTPS
+              - !Ref CertificateArn
+              - ''
+
+
+Outputs:
+
+  EnvironmentURL:
+    Value:
+      !GetAtt ElasticBeanstalkEnvironment.EndpointURL
+
+  EnvironmentName:
+    Value:
+      !Ref ElasticBeanstalkEnvironment

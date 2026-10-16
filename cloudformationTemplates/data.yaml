@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: >
+  DynamoDB resources for the Railway Live Update application.
+
+Parameters:
+
+  ProjectName:
+    Type: String
+
+
+Resources:
+
+  RailwayDataTable:
+    Type: AWS::DynamoDB::Table
+
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+    Properties:
+
+      TableName:
+        !Sub '${ProjectName}-RailwayData'
+
+      BillingMode: PAY_PER_REQUEST
+
+      AttributeDefinitions:
+
+        - AttributeName: stationId
+          AttributeType: S
+
+      KeySchema:
+
+        - AttributeName: stationId
+          KeyType: HASH
+
+
+Outputs:
+
+  DynamoDBTable:
+    Value:
+      !Ref RailwayDataTable
